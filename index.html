@@ -486,7 +486,7 @@ table{border-collapse:collapse;width:100%;}
       <div class="topbar-title">MASTERLOG VENTENO</div>
       <div class="topbar-right">
         <div class="last-update">
-          <div>🗓 Site: <b>24/06/2026 19:43</b></div>
+          <div>🗓 Site: <b id="site-versao">—</b></div>
           <div>📊 Dados: <b id="ultima-atualizacao">—</b></div>
         </div>
         <div class="theme-wrap">
@@ -1746,6 +1746,13 @@ function renderEvolucao(){
 
 // ── Inicializar ──
 function init(){
+  // Data/hora do site — gerada pelo browser ao abrir (horário local do usuário)
+  var sv=el('site-versao');
+  if(sv){
+    var n=new Date();
+    var pad=function(v){return String(v).padStart(2,'0');};
+    sv.textContent=pad(n.getDate())+'/'+pad(n.getMonth()+1)+'/'+n.getFullYear()+' '+pad(n.getHours())+':'+pad(n.getMinutes());
+  }
   if(typeof DADOS_NIE==='undefined'){
     var ov=el('loadingOverlay'); if(ov) ov.innerHTML='<div class="spinner"></div><div class="loading-txt" style="color:#dc2626">ERRO: dados.js não encontrado</div>';
     return;
