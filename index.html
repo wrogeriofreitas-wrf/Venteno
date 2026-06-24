@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Masterlog Venteno · NIE</title>
+<meta name="versao" content="24/06/2026 21:31"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -482,7 +483,7 @@ table{border-collapse:collapse;width:100%;}
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="topbar-title">MASTERLOG VENTENO</div>
+      <div class="topbar-title">MASTERLOG VENTENO <span style="font-size:10px;opacity:.4;font-family:Inter,sans-serif;letter-spacing:1px;">v24/06/2026 21:31</span></div>
       <div class="topbar-right">
         <div class="last-update"><span>Última atualização</span><b id="ultima-atualizacao">—</b></div>
         <div class="theme-wrap">
@@ -1155,7 +1156,10 @@ function renderOKE(){
   var tbody=el('oke-uf-tbody'); if(tbody){
     var rows=ufRows('oke','uf',20,function(uf,regs){
       var m=regs.length>0?sumF(regs,'pontos')/regs.length:0; var pts=m>=1?20:m>=0.95?14:m>=0.90?10:0;
-      return '<tr><td>'+uf+'</td><td>'+fN(regs.length)+'</td><td>'+fN(cnt(regs,'pontos','1.25'))+'</td><td>'+fN(cnt(regs,'pontos','1'))+'</td><td>'+fN(cnt(regs,'pontos','0'))+'</td><td>'+fP(m,4)+'</td><td>'+pts+'</td><td>'+stHtml(pts,20)+'</td></tr>';
+      var nd=regs.filter(function(x){return Number(x.pontos)===1.25;}).length;
+      var a3=regs.filter(function(x){return Number(x.pontos)===1.0;}).length;
+      var fp=regs.filter(function(x){return Number(x.pontos)===0;}).length;
+      return '<tr><td>'+uf+'</td><td>'+fN(regs.length)+'</td><td>'+fN(nd)+'</td><td>'+fN(a3)+'</td><td>'+fN(fp)+'</td><td>'+fP(m,4)+'</td><td>'+pts+'</td><td>'+stHtml(pts,20)+'</td></tr>';
     });
     tbody.innerHTML=rows.join('')||'<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--text-dim)">Sem dados</td></tr>';
   }
