@@ -483,9 +483,12 @@ table{border-collapse:collapse;width:100%;}
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="topbar-title">MASTERLOG VENTENO <span style="font-size:10px;opacity:.4;font-family:Inter,sans-serif;letter-spacing:1px;">v24/06/2026 21:31</span></div>
+      <div class="topbar-title">MASTERLOG VENTENO</div>
       <div class="topbar-right">
-        <div class="last-update"><span>Última atualização</span><b id="ultima-atualizacao">—</b></div>
+        <div class="last-update" style="text-align:right;line-height:1.6;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);">Site: <span style="color:var(--text-sub);">24/06/2026 21:41</span></div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);">Dados: <b id="ultima-atualizacao" style="color:var(--accent);font-weight:700;">—</b></div>
+        </div>
         <div class="theme-wrap">
           <button class="th-btn" id="th-dark" onclick="setTheme('dark')" title="Escuro">🌙</button>
           <button class="th-btn active" id="th-light" onclick="setTheme('light')" title="Claro">☀</button>
@@ -498,7 +501,7 @@ table{border-collapse:collapse;width:100%;}
     <div class="filterbar">
       <div class="f-group">
         <span class="f-label">Mês</span>
-        <select class="f-select" id="f-mes" onchange="aplicarFiltros()">
+        <select class="f-select" id="f-mes" onchange="aplicarFiltros('mes')">
           <option value="">Selecione o mês...</option>
         </select>
       </div>
@@ -921,9 +924,11 @@ function popularFiltros(){
       sel.innerHTML+='<option value="'+m+'">'+l+'</option>';
     });
   }
-  // UF e Filial no MS
+  // UF e Filial no MS (valores completos iniciais)
   MS.uf.opcoes=Array.from(ufs).sort().map(function(u){return{v:u,l:u};});
   MS.filial.opcoes=Array.from(filiais).sort().map(function(f){return{v:f,l:f};});
+  // CD Origem fixo
+  MS.origem.opcoes=[{v:'2',l:'CD Camaçari (BA)'},{v:'5',l:'CD Mata Atlântica (SP)'}];
   // Última atualização
   var ua=el('ultima-atualizacao');
   if(ua&&D.ultima_atualizacao){
@@ -931,14 +936,70 @@ function popularFiltros(){
   }
 }
 
+// Atualizar opções disponíveis com base nos filtros já aplicados (cascata)
+function atualizarCascata(alterado){
+  var D=DADOS_NIE, todos=[];
+  var ABR=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  ['oke','iod','pod','ontime','agendamento'].forEach(function(k){ if(D.registros[k]) todos=todos.concat(D.registros[k]); });
+
+  // Filtrar com os filtros ATUAIS (exceto o que acabou de ser alterado)
+  function filtrarParcial(excluir){
+    return todos.filter(function(r){
+      if(excluir!=='mes'&&F.mes&&r.mes!==F.mes) return false;
+      if(excluir!=='uf'&&F.uf.length&&F.uf.indexOf(r.uf||'')<0) return false;
+      if(excluir!=='filial'&&F.filial.length&&F.filial.indexOf((r.filial||'').trim())<0) return false;
+      if(excluir!=='origem'&&F.origem.length){
+        var serie=r.serie||'';
+        if(F.origem.indexOf(serie)<0) return false;
+      }
+      return true;
+    });
+  }
+
+  // Atualizar UF (excluindo filtro de UF)
+  if(alterado!=='uf'){
+    var dispUF=new Set(filtrarParcial('uf').map(function(r){return r.uf||'';}));
+    MS.uf.opcoes=Array.from(dispUF).filter(Boolean).sort().map(function(u){return{v:u,l:u};});
+  }
+
+  // Atualizar Filial (excluindo filtro de filial)
+  if(alterado!=='filial'){
+    var dispFil=new Set(filtrarParcial('filial').map(function(r){return (r.filial||'').trim();}));
+    MS.filial.opcoes=Array.from(dispFil).filter(Boolean).sort().map(function(f){return{v:f,l:f};});
+  }
+
+  // Atualizar CD Origem (excluindo filtro de origem)
+  if(alterado!=='origem'){
+    var dispSerie=new Set(filtrarParcial('origem').map(function(r){return r.serie||'';}));
+    var todasOrigens=[{v:'2',l:'CD Camaçari (BA)'},{v:'5',l:'CD Mata Atlântica (SP)'}];
+    MS.origem.opcoes=todasOrigens.filter(function(o){return dispSerie.has(o.v);});
+    if(!MS.origem.opcoes.length) MS.origem.opcoes=todasOrigens; // fallback
+  }
+
+  // Atualizar Mês se necessário
+  if(alterado!=='mes'){
+    var dispMeses=new Set(filtrarParcial('mes').map(function(r){return r.mes||'';}));
+    var sel=el('f-mes'); if(sel){
+      var mesAtual=F.mes;
+      sel.innerHTML='<option value="">Selecione o mês...</option>';
+      Array.from(dispMeses).filter(Boolean).sort().forEach(function(m){
+        var p=m.split('/'); var l=ABR[parseInt(p[1])-1]+'/'+p[0].slice(2);
+        sel.innerHTML+='<option value="'+m+'"'+(m===mesAtual?' selected':'')+'>'+l+'</option>';
+      });
+    }
+  }
+}
+
 // ── Filtros: aplicar ──
-function aplicarFiltros(){
+function aplicarFiltros(alterado){
   // Mês
   F.mes=el('f-mes')?el('f-mes').value:'';
   el('f-mes').classList.toggle('ativo',!!F.mes);
   // MS
   function getMS(k){ var s=MS[k]; if(s.todos||!s.sel.size) return []; return Array.from(s.sel); }
   F.uf=getMS('uf'); F.filial=getMS('filial'); F.origem=getMS('origem');
+  // Atualizar cascata — mostrar só opções com dados
+  atualizarCascata(alterado||'');
   renderScreen(screenAtiva());
 }
 function limparTudo(){
@@ -999,7 +1060,7 @@ function msCheck(k,v,c){ var s=MS[k]; s.todos=false; if(c) s.sel.add(v); else s.
 function msAll(k){ MS[k].todos=true; MS[k].sel.clear(); msRenderList(k,''); }
 function msClear(k){ MS[k].todos=false; MS[k].sel.clear(); msRenderList(k,''); }
 function msSearch(k,q){ msRenderList(k,q); }
-function msApply(k){ msClose(k); msUpdateLabel(k); aplicarFiltros(); }
+function msApply(k){ msClose(k); msUpdateLabel(k); aplicarFiltros(k); }
 function msUpdateLabel(k){
   var s=MS[k]; var lbl=el('ms-lbl-'+k); var btn=el('ms-btn-'+k); if(!lbl) return;
   if(s.todos||!s.sel.size){ lbl.textContent='Todos'; btn.classList.remove('ativo'); }
