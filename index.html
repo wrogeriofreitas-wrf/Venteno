@@ -1189,7 +1189,7 @@ function renderAprov(ind,headId,bodyId,chave){
 
   var bEl=el(bodyId); if(!bEl) return;
   bEl.innerHTML=rows.map(function(row){
-    return '<tr><td>'+row.chv+'</td>'+row.ptsMes.map(cellHtml).join('')+'<td><strong>'+row.mediaPts+'</strong></td><td>'+aprovBadge(row.aprov)+'</td></tr>';
+    return '<tr><td>'+row.chv+'</td>'+row.ptsMes.map(cellHtml).join('')+'<td><strong>'+(row.media!==undefined?row.media:'—')+'</strong></td><td>'+aprovBadge(row.aprov)+'</td></tr>';
   }).join('')
   +'<tr class="venteno-row"><td>🏭 VENTENO</td>'+vMes.map(cellHtml).join('')+'<td><strong>'+vMediaPts+'</strong></td><td>'+aprovBadge(vAprov)+'</td></tr>';
 }
