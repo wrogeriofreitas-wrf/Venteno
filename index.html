@@ -483,12 +483,14 @@ table{border-collapse:collapse;width:100%;}
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="topbar-title">MASTERLOG VENTENO</div>
-      <div class="topbar-right">
-        <div class="last-update">
-          <div>🗓 Site: <b id="site-versao">—</b></div>
-          <div>📊 Dados: <b id="ultima-atualizacao">—</b></div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div class="topbar-title">MASTERLOG VENTENO</div>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:10px;color:var(--text-dim);white-space:nowrap;">Versão do Site: <b style="color:var(--text-sub);">24/06/2026 20:05</b></span>
+          <span style="font-size:10px;color:var(--text-dim);white-space:nowrap;">📊 Dados: <b id="ultima-atualizacao" style="color:var(--accent);">—</b></span>
         </div>
+      </div>
+      <div class="topbar-right">
         <div class="theme-wrap">
           <button class="th-btn" id="th-dark" onclick="setTheme('dark')" title="Escuro">🌙</button>
           <button class="th-btn active" id="th-light" onclick="setTheme('light')" title="Claro">☀</button>
@@ -1746,13 +1748,7 @@ function renderEvolucao(){
 
 // ── Inicializar ──
 function init(){
-  // Data/hora do site — gerada pelo browser ao abrir (horário local do usuário)
-  var sv=el('site-versao');
-  if(sv){
-    var n=new Date();
-    var pad=function(v){return String(v).padStart(2,'0');};
-    sv.textContent=pad(n.getDate())+'/'+pad(n.getMonth()+1)+'/'+n.getFullYear()+' '+pad(n.getHours())+':'+pad(n.getMinutes());
-  }
+
   if(typeof DADOS_NIE==='undefined'){
     var ov=el('loadingOverlay'); if(ov) ov.innerHTML='<div class="spinner"></div><div class="loading-txt" style="color:#dc2626">ERRO: dados.js não encontrado</div>';
     return;
