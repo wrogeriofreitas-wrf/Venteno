@@ -926,9 +926,10 @@ function popularFiltros(){
       sel.innerHTML+='<option value="'+m+'">'+l+'</option>';
     });
   }
-  // UF e Filial no MS (valores completos iniciais)
-  MS.uf.opcoes=Array.from(ufs).sort().map(function(u){return{v:u,l:u};});
-  MS.filial.opcoes=Array.from(filiais).sort().map(function(f){return{v:f,l:f};});
+  // UF e Filial no MS (valores completos iniciais) — excluir valores inválidos
+  function valido(v){ return v&&v!=='?'&&v.indexOf('Erro')<0&&v.indexOf('Error')<0; }
+  MS.uf.opcoes=Array.from(ufs).filter(valido).sort().map(function(u){return{v:u,l:u};});
+  MS.filial.opcoes=Array.from(filiais).filter(valido).sort().map(function(f){return{v:f,l:f};});
   // CD Origem fixo
   MS.origem.opcoes=[{v:'2',l:'CD Camaçari (BA)'},{v:'5',l:'CD Mata Atlântica (SP)'}];
   // Última atualização
@@ -967,7 +968,7 @@ function atualizarCascata(alterado){
   // Atualizar Filial (excluindo filtro de filial)
   if(alterado!=='filial'){
     var dispFil=new Set(filtrarParcial('filial').map(function(r){return (r.filial||'').trim();}));
-    MS.filial.opcoes=Array.from(dispFil).filter(Boolean).sort().map(function(f){return{v:f,l:f};});
+    MS.filial.opcoes=Array.from(dispFil).filter(function(f){return f&&f!=='?'&&f.indexOf('Erro')<0;}).sort().map(function(f){return{v:f,l:f};});
   }
 
   // Atualizar CD Origem (excluindo filtro de origem)
@@ -977,6 +978,18 @@ function atualizarCascata(alterado){
     MS.origem.opcoes=todasOrigens.filter(function(o){return dispSerie.has(o.v);});
     if(!MS.origem.opcoes.length) MS.origem.opcoes=todasOrigens; // fallback
   }
+
+  // Limpar seleções que não existem mais nas opcoes — exceto o filtro que acabou de ser alterado
+  ['uf','filial','origem'].forEach(function(k){
+    if(k===alterado) return; // não limpar o que o usuário acabou de selecionar
+    var st=MS[k];
+    if(!st.todos&&st.sel.size>0){
+      var vals=new Set(st.opcoes.map(function(o){return o.v;}));
+      Array.from(st.sel).forEach(function(v){if(!vals.has(v)) st.sel.delete(v);});
+      if(st.sel.size===0) st.todos=true;
+      msUpdateLabel(k);
+    }
+  });
 
   // Atualizar Mês se necessário
   if(alterado!=='mes'){
@@ -1022,7 +1035,10 @@ function filRegs(ind){
   var r=D.registros[campo].slice();
   if(F.mes) r=r.filter(function(x){return x.mes===F.mes;});
   if(F.uf.length) r=r.filter(function(x){return F.uf.indexOf(x.uf||'')>=0;});
-  if(F.filial.length) r=r.filter(function(x){return F.filial.indexOf((x.filial||'').trim())>=0;});
+  if(F.filial.length) r=r.filter(function(x){
+    var fil=(x.filial||'').trim();
+    return fil&&fil!=='?'&&fil.indexOf('Erro')<0&&F.filial.indexOf(fil)>=0;
+  });
   if(F.origem.length) r=r.filter(function(x){return F.origem.indexOf(x.serie||'')>=0;});
   return r;
 }
@@ -1540,7 +1556,10 @@ function calcPtsPorChave(chave){
     var campo=ind==='reag'?'agendamento':ind;
     var r=(D.registros[campo]||[]).slice();
     if(F.mes) r=r.filter(function(x){return x.mes===F.mes;});
-    if(F.filial.length) r=r.filter(function(x){return F.filial.indexOf((x.filial||'').trim())>=0;});
+    if(F.filial.length) r=r.filter(function(x){
+    var fil=(x.filial||'').trim();
+    return fil&&fil!=='?'&&fil.indexOf('Erro')<0&&F.filial.indexOf(fil)>=0;
+  });
     if(F.origem.length) r=r.filter(function(x){return F.origem.indexOf(x.serie||'')>=0;});
     regsAll[ind]=r;
   });
@@ -1697,7 +1716,10 @@ function renderEvolucao(){
       selInds.forEach(function(i){
         var campo=i==='reag'?'agendamento':i;
         var r=(D.registros[campo]||[]).filter(function(x){return (x.uf||x.cd||'')===uf&&x.mes===mes;});
-        if(F.filial.length) r=r.filter(function(x){return F.filial.indexOf((x.filial||'').trim())>=0;});
+        if(F.filial.length) r=r.filter(function(x){
+    var fil=(x.filial||'').trim();
+    return fil&&fil!=='?'&&fil.indexOf('Erro')<0&&F.filial.indexOf(fil)>=0;
+  });
         if(!r.length) return;
         var nscM=i==='qnc'?nscAll.filter(function(x){return x.mes===mes;}):null;
         var res=calcPts(i,r,nscM);
@@ -1719,7 +1741,10 @@ function renderEvolucao(){
     selInds.forEach(function(i){
       var campo=i==='reag'?'agendamento':i;
       var r=(D.registros[campo]||[]).filter(function(x){return x.mes===mes;});
-      if(F.filial.length) r=r.filter(function(x){return F.filial.indexOf((x.filial||'').trim())>=0;});
+      if(F.filial.length) r=r.filter(function(x){
+    var fil=(x.filial||'').trim();
+    return fil&&fil!=='?'&&fil.indexOf('Erro')<0&&F.filial.indexOf(fil)>=0;
+  });
       if(!r.length) return;
       var nscM=i==='qnc'?nscAll.filter(function(x){return x.mes===mes;}):null;
       var res=calcPts(i,r,nscM);
